@@ -1,3 +1,4 @@
+v##We have created a genesis block##
 class Blockchain:
     def __init__(self):
         #constructor
@@ -17,4 +18,4 @@ class Blockchain:
             return block
         
 blockchain=Blockchain() #blockchain is an object of class Blockchain
-##We have created a genesis block##
+
