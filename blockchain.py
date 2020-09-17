@@ -13,7 +13,7 @@ class Blockchain:
         #proof is basically a condition that hash will be generated with what condition
         self.create_block(proof=1, previous_hash='0')
         
-        def create_block(self,proof,previos_hash):
+    def create_block(self,proof,previous_hash):
             #define data for the blocks
             block={'index': len(self.chain)+1,'timestamp':str(datetime.datetime.now()),
                   'proof':proof,
@@ -23,14 +23,14 @@ class Blockchain:
             self.chain.append(block)
             return block
         
-        def get_previous_block(self):
+    def get_previous_block(self):
             return self.chain[-1]
         
-        def hash(self,block):
+    def hash(self,block):
             encoded_block = json.dumps(block).encode()
             return hashlib.sha256(encoded_block).hexdigest()
         
-        def proof_of_work(self,previous_proof):
+    def proof_of_work(self,previous_proof):
             check_proof= False
             new_proof=1
             
@@ -44,6 +44,34 @@ class Blockchain:
                     new_proof=new_proof+1
             
             return new_proof
+    
+    def is_chain_valid(self,chain):
+        previous_block=chain[0]
+        block_index=1
+        while(block_index<len(chain)):
+            block=chain[block_index]
+            
+            if block['previous_hash']!=self.hash(previous_block):
+                return False
+            previous_proof=previous_block['proof']
+            new_proof=block['proof']
+            new_proof=block['proof']
+            hash_operation=hashlib.sha256(str(new_proof**2-previous_proof**2).encode()).hexdigest()
+            
+            if hash_operation[:4]!='0000':
+                return False
+            previous_block=block
+            block_index+=1
+        return True
+    
+    def add_transaction(self,sender,receiver,amount):
+        self.transactions.append({'sender':sender,'receiver':receiver,'amount':amount})
+        previous_block=self.get_previous_block()
+        return previous_block['index']+1
+    
+    def add_nodes(self,address):
+        parsed_url=urlparse(address)
+        self.nodes.add(parsed_url.netloc)
             
         
 blockchain=Blockchain() #blockchain is an object of class Blockchain
@@ -73,7 +101,45 @@ def mine_block():
              'previous_hash':block['previous_hash']}
     
     return jsonify(response),200
+
+
+##getting the chain of blocks
+@app.route('/get_chain',methods=['GET'])
+def get_chain():
+    response={'chain':blockchain.chain,
+             'length':len(blockchain.chain)}
+    return jsonify(response),200
+
+@app.route('/isvalid', methods=['GET'])
+def is_valid():
+    is_valid=blockchain.is_chain_valid(blockchain.chain)
+    if is_valid:
+        response={'message':'The chain is valid'}
+    else:
+        response={'message':'The chain is invalid'}
+    return jsonify(response),200
+
+@app.route('/add_transaction',methods=['POST'])
+def add_transsaction():
+    json=request.get_json()
+    transaction_keys=['sender','receiver','amount']
+    if not all(key in json for key in transaction_keys):
+        return 'Some values are missing',400
+    index=blockchain.add-transaction(json['sender'],json['receiver'],json['amount'])
+    response={'manage': f'The transaction has been added to block {index}'}
+    return jsonify(response),201
+
+@app.route('/connect_nodes',methods=['POST'])
+def connect_nodes():
+    json=request.get_json()
+    nodes=json.get('nodes')
+    if nodes is None:
+        return "No nodes",400
+    for node in nodes:
+        blockchain.add_nodes(node)
+    response={'message':'all nodes are now conneccted', 'Total number of nodes':list(blockchain.nodes)}
+    return jsonify(response),201
     
+
     
-app.run(host=localhost, port=5006)
-    
+app.run(host='127.0.0.1',port=5006)
