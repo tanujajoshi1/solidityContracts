@@ -1,6 +1,9 @@
 import datetime
 import hashlib
 from flask import Flask,jsonify,request 
+from urllib.parse import urlparse
+from uuid import uuid4
+
 
 
 ##We have created a genesis block##
@@ -8,6 +11,8 @@ class Blockchain:
     def __init__(self):
         #constructor
         self.chain=[]
+        self.transactions=[]
+        self.nodes=set()
         
         #genesis block is created first time the constructor is made
         #proof is basically a condition that hash will be generated with what condition
@@ -20,6 +25,7 @@ class Blockchain:
                   'previous_hash':previous_hash}
             ##this block is having data in dictionary form. For dictionary we use json format
             
+            self.transactions=[]
             self.chain.append(block)
             return block
         
@@ -70,8 +76,8 @@ class Blockchain:
         return previous_block['index']+1
     
     def add_nodes(self,address):
-        parsed_url=urlparse(address)
-        self.nodes.add(parsed_url.netloc)
+        parsed_url=urlparse(address)   #urlparse('http://127.0...) Urlparse break the url into diffeent components-scheme,netloc,path,query
+        self.nodes.add(parsed_url.netloc) #adds another node to your network
             
         
 blockchain=Blockchain() #blockchain is an object of class Blockchain
