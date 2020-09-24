@@ -1,3 +1,5 @@
+#To make your own blockchain from genesis 
+
 import datetime
 import hashlib
 from flask import Flask,jsonify,request 
